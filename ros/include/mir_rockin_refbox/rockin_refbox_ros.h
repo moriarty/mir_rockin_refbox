@@ -4,17 +4,17 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 
-#include <mir_protobuf_comm/peer.h>
+#include <protobuf_comm/peer.h>
 
-#include <mir_rockin_proto_msgs/BeaconSignal.pb.h>
-#include <mir_rockin_proto_msgs/VersionInfo.pb.h>
-#include <mir_rockin_proto_msgs/BenchmarkState.pb.h>
-#include <mir_rockin_proto_msgs/Inventory.pb.h>
-#include <mir_rockin_proto_msgs/Order.pb.h>
-#include <mir_rockin_proto_msgs/DrillingMachine.pb.h>
-#include <mir_rockin_proto_msgs/ConveyorBelt.pb.h>
-#include <mir_rockin_proto_msgs/Camera.pb.h>
-#include <mir_rockin_proto_msgs/Image.pb.h>
+#include <raw_refbox_comm/BeaconSignal.pb.h>
+#include <raw_refbox_comm/VersionInfo.pb.h>
+#include <raw_refbox_comm/BenchmarkState.pb.h>
+#include <raw_refbox_comm/Inventory.pb.h>
+#include <raw_refbox_comm/Order.pb.h>
+#include <raw_refbox_comm/DrillingMachine.pb.h>
+#include <raw_refbox_comm/ConveyorBelt.pb.h>
+#include <raw_refbox_comm/Camera.pb.h>
+#include <raw_refbox_comm/Image.pb.h>
 
 #include <boost/asio.hpp>
 #include <boost/date_time.hpp>
