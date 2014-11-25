@@ -3,13 +3,14 @@
 RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
 {
     nh_ = &nh;
-
-    event_out_pub_;
-    conveyor_status_pub_;
-    drill_status_pub_;
-    camera_status_pub_;
-    camera_image_pub_;   
     
+    // ROS Params
+    if (!this->getRefboxConfigParams())
+    {
+        ROS_ERROR("could not get refbox parameters.");
+        exit(0);
+    }
+
     // ROS Subscribers
     event_in_sub_ = nh_->subscribe<std_msgs::String>("event_in", 1, &RockinRefboxRos::cbEventIn, this);
     conveyor_control_sub_ = nh_->subscribe<std_msgs::String>("conveyor_control", 1, &RockinRefboxRos::cbConveyorControl, this); 
@@ -26,6 +27,51 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
 
 RockinRefboxRos::~RockinRefboxRos() { }
 
+bool RockinRefboxRos::getRefboxConfigParams()
+{
+    // REFBOX IP
+    if (nh_->hasParam("refbox/ip"))
+    {
+        ros::param::param<std::string>("refbox/ip", refbox_ip_,"192.168.1.100");
+    } else {
+        ROS_ERROR("no refbox/ip param");
+        return false;
+    }
+    // REFBOX PORT
+    if (nh_->hasParam("refbox/port"))
+    {
+        ros::param::param<int>("refbox/port", refbox_port_, 4446);
+    } else {
+        ROS_ERROR("no refbox/port param");
+        return false;
+    }
+    /* TEAM NAME
+    if (nh_->hasParam("team/name"))
+    {
+        ros::param::param<std::string>("refbox/ip", team_name_);
+    } else {
+        ROS_ERROR("no refbox/ip param");
+        return false;
+    }
+    // TEAM ROBOT NAME
+    if (nh_->hasParam("team/robot"))
+    {
+        ros::param::param<std::string>("team/robot", team_robot_);
+    } else {
+        ROS_ERROR("no team/robot param");
+        return false;
+    }
+    // TEAM PORT
+    if (nh_->hasParam("team/port"))
+    {
+        ros::param::param<int>("team/port", team_port_);
+    } else {
+        ROS_ERROR("no team/port param");
+        return false;
+    }
+*/
+    
+}
 
 void RockinRefboxRos::cbEventIn(const std_msgs::String::ConstPtr& msg)
 {
