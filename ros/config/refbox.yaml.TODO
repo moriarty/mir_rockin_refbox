@@ -1,0 +1,12 @@
+refbox:
+    host: !ipv4 c025-workstation-1
+    send-port: !udp-port 4446
+    recv-port: !udp-port 4447
+
+team:
+    name: bitbots
+    host: !ipv4 127.0.0.1
+    send-port: !udp-port 4446
+    recv-port: !udp-port 4447
+    crypto-key: randomkey
+
