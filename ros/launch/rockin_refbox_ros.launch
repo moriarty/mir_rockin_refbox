@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="mir_rockin_refbox" type="rockin_refbox_ros_node" name="rockin_refbox_comm" output="screen" />
+</launch>
+

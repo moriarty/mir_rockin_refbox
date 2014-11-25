@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <name>mir_rockin_refbox</name>
+  <version>0.0.1</version>
+  <description>provides ros communication interface for rockin refbox</description>
+
+  <license>GPLv3</license>
+
+  <author email="alexander@dal.ca">Alex Moriarty</author>
+
+  <maintainer email="alexander@dal.ca">Alex Moriarty</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>protobuf_catkin</build_depend>
+
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>protobuf_catkin</run_depend>
+
+</package>

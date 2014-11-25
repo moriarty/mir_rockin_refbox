@@ -1,0 +1,69 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(mir_rockin_refbox)
+
+find_package(catkin REQUIRED
+  COMPONENTS
+    raw_refbox_comm
+    roscpp
+    std_msgs
+)
+
+#find_package(protobuf_catkin REQUIRED)
+
+## From roah_rsbb_comm_ros
+add_definitions("-std=c++0x")
+find_package(Boost REQUIRED)
+## End From
+
+catkin_python_setup()
+
+catkin_package(
+  INCLUDE_DIRS
+    ros/include
+    common/include
+  CATKIN_DEPENDS
+    roscpp
+    rospy
+    std_msgs
+)
+
+include_directories(
+  ros/include
+  common/include
+  ${catkin_INCLUDE_DIRS}
+)
+
+add_executable(rockin_refbox_ros_node
+  ros/src/rockin_refbox_ros_node.cpp
+  ros/src/rockin_refbox_ros.cpp
+)
+
+add_dependencies(rockin_refbox_ros_node
+  ${catkin_EXPORTED_TARGETS}
+)
+
+target_link_libraries(rockin_refbox_ros_node
+  ${catkin_LIBRARIES}
+)
+
+install(TARGETS rockin_refbox_ros_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY common/include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
+install(DIRECTORY ros/include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
+
+install(DIRECTORY ros/launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/ros/launch
+)
