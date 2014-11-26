@@ -5,6 +5,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/date_time.hpp>
+#include <boost/thread/thread.hpp>
 #include <protobuf_comm/peer.h>
 #include <raw_refbox_comm/BeaconSignal.pb.h>
 #include <raw_refbox_comm/VersionInfo.pb.h>

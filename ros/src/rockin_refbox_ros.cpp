@@ -117,7 +117,7 @@ bool RockinRefboxRos::startRefbox()
 {
     if(refbox_)
     {
-       // refbox_->start();
+        refbox_->start();
         return true;
     }
     return false;

@@ -49,7 +49,7 @@ void RockinRefbox::start()
     timer_ = new boost::asio::deadline_timer(io_service_);
     timer_->expires_from_now(boost::posix_time::milliseconds(1000));
     timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal, this));
-    io_service_.run();   
+    boost::thread bt(boost::bind(&boost::asio::io_service::run, &io_service_));
 }
 
 void RockinRefbox::stop()
@@ -59,12 +59,12 @@ void RockinRefbox::stop()
         timer_->cancel();
     }
 
+    io_service_.stop();
     run_timer_ = false;
 }
 
 void RockinRefbox::send_beacon_signal()
 {
- //   std::cout << "sending beacon" << std::endl;
     boost::posix_time::ptime now(boost::posix_time::microsec_clock::universal_time());
     std::shared_ptr<BeaconSignal> signal(new BeaconSignal());
     Time *time = signal->mutable_time();
