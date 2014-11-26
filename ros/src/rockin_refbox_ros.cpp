@@ -11,6 +11,10 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
         exit(0);
     }
 
+    //
+    refbox_ = new RockinRefbox(team_robot_, team_name_, refbox_ip_, 
+        refbox_port_, team_port_); 
+
     // ROS Subscribers
     event_in_sub_ = nh_->subscribe<std_msgs::String>("event_in", 1, &RockinRefboxRos::cbEventIn, this);
     conveyor_control_sub_ = nh_->subscribe<std_msgs::String>("conveyor_control", 1, &RockinRefboxRos::cbConveyorControl, this); 
@@ -32,7 +36,9 @@ bool RockinRefboxRos::getRefboxConfigParams()
     // REFBOX IP
     if (nh_->hasParam("refbox/ip"))
     {
-        ros::param::param<std::string>("refbox/ip", refbox_ip_,"192.168.1.100");
+        nh_->param<std::string>("refbox/ip", refbox_ip_,"192.168.2.107");
+        ROS_INFO("Refbox IP: %s", refbox_ip_.c_str() );
+        ROS_INFO("namespace!!!!!! %s", nh_->getNamespace().c_str());
     } else {
         ROS_ERROR("no refbox/ip param");
         return false;
@@ -40,15 +46,17 @@ bool RockinRefboxRos::getRefboxConfigParams()
     // REFBOX PORT
     if (nh_->hasParam("refbox/port"))
     {
-        ros::param::param<int>("refbox/port", refbox_port_, 4446);
+        nh_->param<int>("refbox/port", refbox_port_, 4446);
+        ROS_INFO("Refbox Port: %d", refbox_port_);
     } else {
         ROS_ERROR("no refbox/port param");
         return false;
     }
-    /* TEAM NAME
+    // TEAM NAME
     if (nh_->hasParam("team/name"))
     {
-        ros::param::param<std::string>("refbox/ip", team_name_);
+        nh_->param<std::string>("refbox/ip", team_name_, "b-it-bots");
+        ROS_INFO("Team Name %s", team_name_.c_str());
     } else {
         ROS_ERROR("no refbox/ip param");
         return false;
@@ -56,7 +64,8 @@ bool RockinRefboxRos::getRefboxConfigParams()
     // TEAM ROBOT NAME
     if (nh_->hasParam("team/robot"))
     {
-        ros::param::param<std::string>("team/robot", team_robot_);
+        nh_->param<std::string>("team/robot", team_robot_, "youbot-brsu");
+        ROS_INFO("Robot Name: %s", team_robot_.c_str());
     } else {
         ROS_ERROR("no team/robot param");
         return false;
@@ -64,12 +73,13 @@ bool RockinRefboxRos::getRefboxConfigParams()
     // TEAM PORT
     if (nh_->hasParam("team/port"))
     {
-        ros::param::param<int>("team/port", team_port_);
+        nh_->param<int>("team/port", team_port_, 4446);
+        ROS_INFO("Team port %d", team_port_);
     } else {
         ROS_ERROR("no team/port param");
         return false;
     }
-*/
+    return true;
     
 }
 
