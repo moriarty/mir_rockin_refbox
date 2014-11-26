@@ -1,22 +1,32 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(mir_rockin_refbox)
 
-find_package(catkin REQUIRED    
+find_package(catkin REQUIRED
   COMPONENTS
+    message_generation
     raw_refbox_comm
     roscpp
     std_msgs
 )
 
 find_package(Protobuf REQUIRED)
-#find_package(protobuf_catkin REQUIRED)
 
-## From roah_rsbb_comm_ros
 add_definitions("-std=c++0x")
 find_package(Boost REQUIRED)
-## End From
 
-catkin_python_setup()
+add_message_files(
+  FILES
+    BenchmarkState.msg
+)
+
+
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
+#catkin_python_setup()
 
 catkin_package(
   INCLUDE_DIRS
@@ -35,7 +45,7 @@ include_directories(
   ${Protobuf_INCLUDE_DIRS}
 )
 
-add_executable(rockin_refbox_ros_node  
+add_executable(rockin_refbox_ros_node
   ros/src/rockin_refbox_ros_node.cpp
   ros/src/rockin_refbox_ros.cpp
   common/src/rockin_refbox.cpp

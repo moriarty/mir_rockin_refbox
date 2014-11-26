@@ -31,12 +31,60 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
     conveyor_status_pub_ = nh_->advertise<std_msgs::String>("conveyor_status", 1);
     drill_status_pub_ = nh_->advertise<std_msgs::String>("drill_status", 1);
     camera_status_pub_ = nh_->advertise<std_msgs::String>("camera_status", 1);
+    benchmark_state_pub_ = nh_->advertise<mir_rockin_refbox::BenchmarkState>("benchmark_state", 1);
     //camera_image_pub_ = nh_->advertise<std_msgs::String>("topic", 1);
 }
 
 RockinRefboxRos::~RockinRefboxRos()
 {
     delete refbox_;
+}
+
+void RockinRefboxRos::initState()
+{
+    state_ = IDLE;
+}
+
+void RockinRefboxRos::idleState()
+{
+    // IF event_in_.dat
+    if (event_in_ == "e_start") {
+        state_ = RUNNING;
+    } else {
+        state_ = IDLE;
+    }
+}
+
+void RockinRefboxRos::runningState()
+{
+    //
+    handleRequest();
+    state_ = IDLE;
+}
+
+void RockinRefboxRos::handleRequest()
+{
+    if (request_in_ == "r_state") {
+        std::shared_ptr<BenchmarkState> benchmark_sate = refbox_->get_benchmark_state();
+
+    }
+}
+
+void RockinRefboxRos::executeCycle()
+{
+    switch (state_) {
+        case INIT:
+        initState();
+        break;
+        case IDLE:
+        idleState();
+        break;
+        case RUNNING:
+        runningState();
+        break;
+        default:
+        initState();
+    }
 }
 
 bool RockinRefboxRos::startRefbox()
@@ -58,15 +106,6 @@ bool RockinRefboxRos::stopRefbox()
     }
     return false;
 }
-
-/*
-void RockinRefboxRos::mySignalHandler(int sig)
-{
-    stopRefbox();
-    ros::shutdown();
-}
-*/
-
 
 bool RockinRefboxRos::getRefboxConfigParams()
 {
@@ -123,6 +162,10 @@ bool RockinRefboxRos::getRefboxConfigParams()
 void RockinRefboxRos::cbEventIn(const std_msgs::String::ConstPtr& msg)
 {
     event_in_ = msg->data;
+}
+void RockinRefboxRos::cbRequestIn(const std_msgs::String::ConstPtr& msg)
+{
+    request_in_ = msg->data;
 }
 void RockinRefboxRos::cbConveyorControl(const std_msgs::String::ConstPtr& msg)
 {

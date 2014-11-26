@@ -6,6 +6,7 @@
 #include <csignal>
 
 #include <mir_rockin_refbox/rockin_refbox.h>
+#include <mir_rockin_refbox/BenchmarkState.h>
 
 using std::string;
 using std::signal;
@@ -19,8 +20,14 @@ public:
     //void mySignalHandler(int sig);
     bool startRefbox();
     bool stopRefbox();
+    void executeCycle();
 
 private:
+    enum State {
+        INIT,
+        IDLE,
+        RUNNING
+    };
     // methods
     bool controlDrillingMachine(const std::string& command);
     bool controlConveyorBelt(const std::string& command);
@@ -31,20 +38,33 @@ private:
     void cameraStatus(const std::string& status);
 
     void cbEventIn(const std_msgs::String::ConstPtr& msg);
+    void cbRequestIn(const std_msgs::String::ConstPtr& msg);
     void cbConveyorControl(const std_msgs::String::ConstPtr& msg);
     void cbDrillControl(const std_msgs::String::ConstPtr& msg);
     void cbCameraControl(const std_msgs::String::ConstPtr& msg);
     bool getRefboxConfigParams();
 
+    void initState();
+    void idleState();
+    void runningState();
+    void handleRequest();
+
     // variables
     RockinRefbox* refbox_;
-
     ros::NodeHandle* nh_;
+
+    // Data from ROS topics
     string event_in_;
+    string request_in_;
     string conveyor_control_;
     string drill_control_;
     string camera_control_;
+    //TODO FEEDBACK TO PASS TO REFBOX ?
 
+    // internal state variables
+    State state_;
+
+    // ROS params
     string refbox_ip_;
     int refbox_public_port_;
     string team_name_;
@@ -57,6 +77,7 @@ private:
     ros::Publisher drill_status_pub_;
     ros::Publisher camera_status_pub_;
     ros::Publisher camera_image_pub_;
+    ros::Publisher benchmark_state_pub_;
 
     // ROS Subscribers
     ros::Subscriber event_in_sub_;
