@@ -17,7 +17,8 @@
 using namespace rockin_msgs;
 
 RockinRefbox::RockinRefbox(const std::string &name, const std::string &team_name, const std::string &host, int recv_port,
-        int send_port) : name_(name), team_name_(team_name), host_(host), recv_port_(recv_port), send_port_(send_port), sequence_number_(0)
+        int send_port) : name_(name), team_name_(team_name), host_(host), recv_port_(recv_port), send_port_(send_port), sequence_number_(0),
+                         run_timer_(false)
 {
     std::cout << "starting rockin ref box" << std::endl;
     peer_public_ = new ProtobufBroadcastPeer(host_,recv_port_,send_port_);
@@ -41,21 +42,6 @@ RockinRefbox::RockinRefbox(const std::string &name, const std::string &team_name
     peer_public_->signal_recv_error().connect(boost::bind(&RockinRefbox::handle_recv_error,this, _1, _2));
     peer_public_->signal_send_error().connect(boost::bind(&RockinRefbox::handle_send_error, this, _1));
 
-#define BOOST_T_TIMER
-#ifdef BOOST_T_TIMER
-    boost::asio::io_service io_service;
-    timer_ = new boost::asio::deadline_timer(io_service);
-    timer_->expires_from_now(boost::posix_time::milliseconds(2000));
-    timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal, this));
-//    boost::asio::signal_set signals(io_service, SIGINT, SIGTERM);
-//    signals.async_wait(boost::bind(&RockinRefbox::service_signals, this, _1, _2));
-    io_service.run();
-#else
-    while(true)
-    {
-        send_beacon_signal();
-    }
-#endif
 }
 
 
@@ -63,6 +49,26 @@ RockinRefbox::~RockinRefbox()
 {
     delete timer_;
     delete peer_public_;
+}
+
+void RockinRefbox::start()
+{
+    run_timer_ = true;
+    boost::asio::io_service io_service;
+    timer_ = new boost::asio::deadline_timer(io_service);
+    timer_->expires_from_now(boost::posix_time::milliseconds(1000));
+    timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal, this));
+    io_service.run();   
+}
+
+void RockinRefbox::stop()
+{
+    if (timer_)
+    {
+        timer_->cancel();
+    }
+
+    run_timer_ = false;
 }
 
 void RockinRefbox::send_beacon_signal()
@@ -84,59 +90,20 @@ void RockinRefbox::send_beacon_signal()
     signal->set_seq(++sequence_number_);
     peer_public_->send(signal);
 
-        /*
-
-        // Request a camera image
-        CameraCommand cam_cmd;
-        peer_team_->send(cam_cmd);
-
-
-        // Send benchnmark feedback
-        BenchmarkFeedback bf;
-        bf.mutable_object_pose()->mutable_position()->set_x(0.0);
-        bf.mutable_object_pose()->mutable_position()->set_y(0.0);
-        bf.mutable_object_pose()->mutable_position()->set_z(0.0);
-        bf.mutable_object_pose()->mutable_orientation()->set_w(0.0);
-        bf.mutable_object_pose()->mutable_orientation()->set_x(1.0);
-        bf.mutable_object_pose()->mutable_orientation()->set_y(0.0);
-        bf.mutable_object_pose()->mutable_orientation()->set_z(0.0);
-        bf.mutable_end_effector_pose()->mutable_position()->set_x(0.0);
-        bf.mutable_end_effector_pose()->mutable_position()->set_y(0.0);
-        bf.mutable_end_effector_pose()->mutable_position()->set_z(0.0);
-        bf.mutable_end_effector_pose()->mutable_orientation()->set_w(0.0);
-        bf.mutable_end_effector_pose()->mutable_orientation()->set_x(1.0);
-        bf.mutable_end_effector_pose()->mutable_orientation()->set_y(0.0);
-        bf.mutable_end_effector_pose()->mutable_orientation()->set_z(0.0);
-        bf.set_object_instance_name("AX-01");
-        bf.set_object_class_name("aluminium");
-        bf.set_grasp_notification(true);
-        peer_public_->send(bf); */
-#ifdef BOOST_T_TIMER
     timer_->expires_at(timer_->expires_at()
-          + boost::posix_time::milliseconds(2000));
+          + boost::posix_time::milliseconds(1000));
     timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal,this));
-#endif
-}
-
-void RockinRefbox::service_signals(const boost::system::error_code &error, int signum)
-{
-    if (!error)
-    {
-        if (timer_)
-        {
-            timer_->cancel();
-        }
-    }
 }
 
 void RockinRefbox::handle_recv_error(boost::asio::ip::udp::endpoint &endpoint, std::string msg)
 {
-
+    std::cout << "Received error from " << endpoint.address().to_string() << ":" << endpoint.port() << ", " << msg << std::endl;
 }
 
 
 void RockinRefbox::handle_send_error(std::string msg)
 {
+    std::cout <<"Message send error: " << msg << std::endl;
 }
 
 

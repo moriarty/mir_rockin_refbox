@@ -19,6 +19,9 @@ class RockinRefbox
         void handle_send_error(std::string msg);
         void handle_message(boost::asio::ip::udp::endpoint &sender, uint16_t component_id, uint16_t msg_type, std::shared_ptr<google::protobuf::Message> msg);
         void service_signals(const boost::system::error_code &error, int signum);
+
+        void start();
+        void stop();
         
 
     private:
@@ -29,9 +32,10 @@ class RockinRefbox
         std::string team_name_;
         std::string host_;
         int recv_port_;
-        int send_port_;
+        int send_port_;       
         unsigned long sequence_number_;
         ProtobufBroadcastPeer *peer_public_;
         boost::asio::deadline_timer *timer_;
+        bool run_timer_;
 };
 #endif
