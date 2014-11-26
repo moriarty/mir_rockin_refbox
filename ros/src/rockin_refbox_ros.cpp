@@ -18,8 +18,7 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
         ROS_ERROR("new RockinRefbox creation failed!!!!");
     }
 
-    signal(SIGINT, signalHandler);
-    refbox_->start();
+    //signal(SIGINT, boost::bind(&RockinRefboxRos::mySignalHandler,this, _1));
 
     // ROS Subscribers
     event_in_sub_ = nh_->subscribe<std_msgs::String>("event_in", 1, &RockinRefboxRos::cbEventIn, this);
@@ -35,16 +34,39 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
     //camera_image_pub_ = nh_->advertise<std_msgs::String>("topic", 1);
 }
 
-RockinRefboxRos::~RockinRefboxRos() { }
+RockinRefboxRos::~RockinRefboxRos()
+{
+    delete refbox_;
+}
 
-void RockinRefboxRos::signalHandler()
+bool RockinRefboxRos::startRefbox()
+{
+    if(refbox_)
+    {
+        refbox_->start();
+        return true;
+    }
+    return false;
+}
+
+bool RockinRefboxRos::stopRefbox()
 {
     if(refbox_)
     {
         refbox_->stop();
+        return true;
     }
+    return false;
+}
+
+/*
+void RockinRefboxRos::mySignalHandler(int sig)
+{
+    stopRefbox();
     ros::shutdown();
 }
+*/
+
 
 bool RockinRefboxRos::getRefboxConfigParams()
 {

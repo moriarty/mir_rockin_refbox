@@ -3,11 +3,12 @@
 
 #include <ros/ros.h>
 #include <std_msgs/String.h>
-#include <signal.h>
+#include <csignal>
 
 #include <mir_rockin_refbox/rockin_refbox.h>
 
 using std::string;
+using std::signal;
 
 class RockinRefboxRos
 {
@@ -15,8 +16,9 @@ public:
     RockinRefboxRos(ros::NodeHandle &nh);
     ~RockinRefboxRos();
 
-    void signalHandler(int sig);
-
+    //void mySignalHandler(int sig);
+    bool startRefbox();
+    bool stopRefbox();
 
 private:
     // methods
