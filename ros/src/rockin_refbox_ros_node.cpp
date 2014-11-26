@@ -6,6 +6,7 @@ void mySignalHandler(int sig)
 {
     if(g_refbox_ros)
     {
+        ROS_ERROR("KILLING REFBOX");
         g_refbox_ros->stopRefbox();
     }
     ros::shutdown();
@@ -21,7 +22,11 @@ int main(int argc, char **argv)
 
     signal(SIGINT, mySignalHandler);
 
-    ros::spin();
+    while (ros::ok()) {
+        g_refbox_ros->executeCycle();
+        ros::Rate(10).sleep();
+        ros::spinOnce();
+    }
 
     delete g_refbox_ros;
 

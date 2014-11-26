@@ -66,6 +66,7 @@ void RockinRefboxRos::runningState()
 void RockinRefboxRos::handleRequest()
 {
     if (request_in_ == "r_state") {
+        ROS_INFO("Handling r_state request");
         std::shared_ptr<BenchmarkState> benchmark_state = refbox_->get_benchmark_state();
         if (benchmark_state) {
             mir_rockin_refbox::BenchmarkState bm_msg;
@@ -75,6 +76,7 @@ void RockinRefboxRos::handleRequest()
         }
     }
     if (request_in_ == "r_task") {
+        ROS_INFO("Handling r_task request");
         std::shared_ptr<OrderInfo> order_info = refbox_->get_order();
         std::shared_ptr<Inventory> inventory = refbox_->get_inventory();
         if (order_info && inventory)
@@ -125,9 +127,11 @@ bool RockinRefboxRos::stopRefbox()
 {
     if(refbox_)
     {
+        ROS_ERROR("STOP REFBOX_ !!!!!!");
         refbox_->stop();
         return true;
     }
+    ROS_ERROR("REFBOX_ DOESN'T EXIST - CAN'T STOP!!!!");
     return false;
 }
 
