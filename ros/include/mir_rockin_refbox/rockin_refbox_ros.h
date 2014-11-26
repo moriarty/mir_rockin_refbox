@@ -46,10 +46,10 @@ private:
     string camera_control_;
 
     string refbox_ip_;
-    int refbox_port_;
+    int refbox_public_port_;
     string team_name_;
     string team_robot_;
-    int team_port_;
+    int team_private_port_;
 
     // ROS Publishers
     ros::Publisher event_out_pub_;

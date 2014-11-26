@@ -1,10 +1,8 @@
 refbox:
     ip: 192.168.2.107
-    port: 4446
+    public_port: 4444
 
 team:
     name: b-it-bots
-    robot: santosh    
-    port: 4446
-
-
+    robot: santosh
+    private_port: 4446

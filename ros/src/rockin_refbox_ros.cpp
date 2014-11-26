@@ -13,7 +13,7 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
 
     //
     refbox_ = new RockinRefbox(team_robot_, team_name_, refbox_ip_,
-        refbox_port_, team_port_);
+        refbox_public_port_, team_private_port_);
     if(!refbox_){
         ROS_ERROR("new RockinRefbox creation failed!!!!");
     }
@@ -83,16 +83,16 @@ bool RockinRefboxRos::getRefboxConfigParams()
     // REFBOX PORT
     if (nh_->hasParam("refbox/port"))
     {
-        nh_->param<int>("refbox/port", refbox_port_, 4446);
-        ROS_INFO("Refbox Port: %d", refbox_port_);
+        nh_->param<int>("refbox/public_port", refbox_public_port_, 4446);
+        ROS_INFO("Refbox Port: %d", refbox_public_port_);
     } else {
-        ROS_ERROR("no refbox/port param");
+        ROS_ERROR("no refbox/public_port param");
         return false;
     }
     // TEAM NAME
     if (nh_->hasParam("team/name"))
     {
-        nh_->param<std::string>("refbox/ip", team_name_, "b-it-bots");
+        nh_->param<std::string>("team/name", team_name_, "b-it-bots");
         ROS_INFO("Team Name %s", team_name_.c_str());
     } else {
         ROS_ERROR("no refbox/ip param");
@@ -108,10 +108,10 @@ bool RockinRefboxRos::getRefboxConfigParams()
         return false;
     }
     // TEAM PORT
-    if (nh_->hasParam("team/port"))
+    if (nh_->hasParam("team/private_port"))
     {
-        nh_->param<int>("team/port", team_port_, 4446);
-        ROS_INFO("Team port %d", team_port_);
+        nh_->param<int>("team/private_port", team_private_port_, 4446);
+        ROS_INFO("Team port %d", team_private_port_);
     } else {
         ROS_ERROR("no team/port param");
         return false;
