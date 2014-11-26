@@ -149,7 +149,7 @@ string RockinRefboxRos::parseIntoRoboCupTask(std::shared_ptr<OrderInfo> order_in
         task_spec += "<";
         task_spec += map_iter->first + ",line(";
         std::vector<std::string> v = map_iter->second;
-        // add objects at source location
+        // add objects at destination location
         for (int i = 0; i < v.size(); i++)
         {
             if (i != 0)
