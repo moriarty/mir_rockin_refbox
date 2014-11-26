@@ -1,21 +1,6 @@
 
 #include <mir_rockin_refbox/rockin_refbox.h>
 
-
-#include <raw_refbox_comm/BeaconSignal.pb.h>
-#include <raw_refbox_comm/VersionInfo.pb.h>
-#include <raw_refbox_comm/BenchmarkState.pb.h>
-#include <raw_refbox_comm/Inventory.pb.h>
-#include <raw_refbox_comm/Order.pb.h>
-#include <raw_refbox_comm/DrillingMachine.pb.h>
-#include <raw_refbox_comm/ConveyorBelt.pb.h>
-#include <raw_refbox_comm/Camera.pb.h>
-#include <raw_refbox_comm/Image.pb.h>
-#include <raw_refbox_comm/BenchmarkFeedback.pb.h>
-#include <raw_refbox_comm/Time.pb.h>
-
-using namespace rockin_msgs;
-
 RockinRefbox::RockinRefbox(const std::string &name, const std::string &team_name, const std::string &host, int public_port,
         int private_port) : name_(name), team_name_(team_name), host_(host), public_port_(public_port), private_port_(private_port), sequence_number_(0),
                          run_timer_(false)
@@ -55,12 +40,13 @@ RockinRefbox::~RockinRefbox()
 {
     delete timer_;
     delete peer_public_;
+    delete peer_team_;
 }
 
 void RockinRefbox::start()
 {
     run_timer_ = true;
-    timer_ = new boost::asio::deadline_timer(io_service_:);
+    timer_ = new boost::asio::deadline_timer(io_service_);
     timer_->expires_from_now(boost::posix_time::milliseconds(1000));
     timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal, this));
     io_service_.run();   
@@ -117,32 +103,107 @@ void RockinRefbox::handle_send_error(std::string msg)
 
 void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16_t component_id, uint16_t msg_type, std::shared_ptr<google::protobuf::Message> msg)
 {
-    std::cout << "received message " << std::endl;
-    std::shared_ptr<BenchmarkState> bs;
-    if ((bs = std::dynamic_pointer_cast<BenchmarkState>(msg)))
-    {
+    if ((beacon_msg_ = std::dynamic_pointer_cast<BeaconSignal>(msg))) {
+        std::cout << "Detected robot: " << beacon_msg_->team_name() << " " << beacon_msg_->peer_name() << " (seq " << beacon_msg_->seq() << ")" << std::endl;
+    }
+
+    if ((version_msg_ = std::dynamic_pointer_cast<VersionInfo>(msg))) {
+        std::cout << "VersionInfo received: " << version_msg_->version_string() << std::endl;
+    }
+
+    if ((benchmark_state_msg_ = std::dynamic_pointer_cast<BenchmarkState>(msg))) {
         std::cout << "BenchmarkState received:" << std::endl;
 
-        std::cout << "  Time: " << bs->benchmark_time().sec() << "s" << std::endl;
+        std::cout << "  Time: " << benchmark_state_msg_->benchmark_time().sec() << "s" << std::endl;
 
         std::cout << "  Phase: ";
-        switch (bs->phase().type())
-        {
+        switch (benchmark_state_msg_->phase().type()) {
             case BenchmarkPhase::NONE: std::cout << "NONE"; break;
             case BenchmarkPhase::FBM: std::cout << "FBM"; break;
             case BenchmarkPhase::TBM: std::cout << "TBM"; break;
         }
-        std::cout << " " << bs->phase().type_id();
-        if (bs->phase().has_description()) std::cout << " (" << bs->phase().description() << ")";
+        std::cout << " " << benchmark_state_msg_->phase().type_id();
+        if (benchmark_state_msg_->phase().has_description()) std::cout << " (" << benchmark_state_msg_->phase().description() << ")";
         std::cout << std::endl;
 
         std::cout << "  State: ";
-        switch (bs->state())
-        {
+        switch (benchmark_state_msg_->state()) {
             case BenchmarkState::INIT: std::cout << "INIT" << std::endl; break;
             case BenchmarkState::RUNNING: std::cout << "RUNNING" << std::endl; break;
             case BenchmarkState::PAUSED: std::cout << "PAUSED" << std::endl; break;
             case BenchmarkState::FINISHED: std::cout << "FINISHED" << std::endl; break;
         }
+
+        std::cout << "  Known teams: ";
+        for (int i = 0; i < benchmark_state_msg_->known_teams_size(); i++) std::cout << benchmark_state_msg_->known_teams(i) << ", ";
+        std::cout << std::endl;
+
+        std::cout << "  Connected teams: ";
+        for (int i = 0; i < benchmark_state_msg_->connected_teams_size(); i++) std::cout << benchmark_state_msg_->connected_teams(i) << ", ";
+        std::cout << std::endl;
+    }
+
+    if ((inventory_msg_ = std::dynamic_pointer_cast<Inventory>(msg))) {
+        std::cout << "Inventory received:" << std::endl;
+
+        for (int i = 0; i < inventory_msg_->items_size(); i++) {
+            const Inventory_Item &item = inventory_msg_->items(i);
+            std::cout << "  Object " << i << ": " << item.object().description() << std::endl;
+            if (item.has_location()) std::cout << "    In location: " << item.location().description() << std::endl;
+            if (item.has_container()) std::cout << "    In container: " << item.container().description() << std::endl;
+            if (item.has_quantity()) std::cout << "    Quantity: " << item.quantity() << std::endl;
+        }
+    }
+
+    if ((order_msg_ = std::dynamic_pointer_cast<OrderInfo>(msg))) {
+        std::cout << "OrderInfo received" << std::endl;
+
+        for (int i = 0; i < order_msg_->orders_size(); i++) {
+            const Order &order = order_msg_->orders(i);
+            std::cout << "  Order " << i << ":" << std::endl;
+            std::cout << "    Identifier: " << order.id() << std::endl;
+            std::cout << "    Status: ";
+            switch (order.status()) {
+                case Order::OFFERED: std::cout << "OFFERED"; break;
+                case Order::TIMEOUT: std::cout << "TIMEOUT"; break;
+                case Order::IN_PROGRESS: std::cout << "IN_PROGRESS"; break;
+                case Order::PAUSED: std::cout << "PAUSED"; break;
+                case Order::ABORTED: std::cout << "ABORTED"; break;
+                case Order::FINISHED: std::cout << "FINISHED"; break;
+            }
+            std::cout << std::endl;
+            std::cout << "    Object: " << order.object().description() << std::endl;
+            if (order.has_container()) std::cout << "    Container: " << order.container().description() << std::endl;
+            std::cout << "    Quantity delivered: " << order.quantity_delivered() << std::endl;
+            if (order.has_quantity_requested()) std::cout << "    Quantity requested: " << order.quantity_requested() << std::endl;
+            if (order.has_destination()) std::cout << "    Destination: " << order.destination().description() << std::endl;
+            if (order.has_source()) std::cout << "    Source: " << order.source().description() << std::endl;
+            if (order.has_processing_team()) std::cout << "    Processing team: " << order.processing_team() << std::endl;
+        }
+    }
+
+    if ((drilling_machine_msg_ = std::dynamic_pointer_cast<DrillingMachineStatus>(msg))) {
+        std::cout << "Drilling machine status received: ";
+        switch (drilling_machine_msg_->state()) {
+            case DrillingMachineStatus::AT_BOTTOM: std::cout << "AT_BOTTOM"; break;
+            case DrillingMachineStatus::AT_TOP: std::cout << "AT_TOP"; break;
+            case DrillingMachineStatus::MOVING_DOWN: std::cout << "MOVING_DOWN"; break;
+            case DrillingMachineStatus::MOVING_UP: std::cout << "MOVING_UP"; break;
+            case DrillingMachineStatus::UNKNOWN: std::cout << "UNKNOWN"; break;
+        }
+        std::cout << std::endl;
+    }
+
+    if ((conveyor_belt_msg_ = std::dynamic_pointer_cast<ConveyorBeltStatus>(msg))) {
+        std::cout << "Conveyor belt status received: ";
+        switch (conveyor_belt_msg_->state()) {
+            case ConveyorBeltRunMode::START: std::cout << "RUNNING"; break;
+            case ConveyorBeltRunMode::STOP: std::cout << "STOPPED"; break;
+        }
+        std::cout << std::endl;
+    }
+
+    if ((image_msg_ = std::dynamic_pointer_cast<Image>(msg))) {
+        std::cout << "Image received (width=" << image_msg_->width() << ", height=" << image_msg_->height() << ", step=" << image_msg_->step() <<")" << std::endl;
     }
 }

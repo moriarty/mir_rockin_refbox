@@ -6,7 +6,19 @@
 #include <boost/asio.hpp>
 #include <boost/date_time.hpp>
 #include <protobuf_comm/peer.h>
+#include <raw_refbox_comm/BeaconSignal.pb.h>
+#include <raw_refbox_comm/VersionInfo.pb.h>
+#include <raw_refbox_comm/BenchmarkState.pb.h>
+#include <raw_refbox_comm/Inventory.pb.h>
+#include <raw_refbox_comm/Order.pb.h>
+#include <raw_refbox_comm/DrillingMachine.pb.h>
+#include <raw_refbox_comm/ConveyorBelt.pb.h>
+#include <raw_refbox_comm/Camera.pb.h>
+#include <raw_refbox_comm/Image.pb.h>
+#include <raw_refbox_comm/BenchmarkFeedback.pb.h>
+#include <raw_refbox_comm/Time.pb.h>
 using namespace protobuf_comm;
+using namespace rockin_msgs;
 
 class RockinRefbox
 {
@@ -31,12 +43,22 @@ class RockinRefbox
         std::string name_;
         std::string team_name_;
         std::string host_;
-        int recv_port_;
-        int send_port_;       
+        int private_port_;
+        int public_port_;       
         unsigned long sequence_number_;
         ProtobufBroadcastPeer *peer_public_;
+        ProtobufBroadcastPeer *peer_team_;
         boost::asio::deadline_timer *timer_;
         bool run_timer_;
         boost::asio::io_service io_service_;
+        
+        std::shared_ptr<BeaconSignal> beacon_msg_;
+        std::shared_ptr<VersionInfo> version_msg_;
+        std::shared_ptr<BenchmarkState> benchmark_state_msg_;
+        std::shared_ptr<Inventory> inventory_msg_;
+        std::shared_ptr<OrderInfo> order_msg_;
+        std::shared_ptr<DrillingMachineStatus> drilling_machine_msg_;
+        std::shared_ptr<ConveyorBeltStatus> conveyor_belt_msg_;
+        std::shared_ptr<Image> image_msg_;
 };
 #endif
