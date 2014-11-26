@@ -16,15 +16,16 @@
 
 using namespace rockin_msgs;
 
-RockinRefbox::RockinRefbox(const std::string &name, const std::string &team_name, const std::string &host, int recv_port,
-        int send_port) : name_(name), team_name_(team_name), host_(host), recv_port_(recv_port), send_port_(send_port), sequence_number_(0),
+RockinRefbox::RockinRefbox(const std::string &name, const std::string &team_name, const std::string &host, int public_port,
+        int private_port) : name_(name), team_name_(team_name), host_(host), public_port_(public_port), private_port_(private_port), sequence_number_(0),
                          run_timer_(false)
 {
-    std::cout << "starting rockin ref box" << std::endl;
-    peer_public_ = new ProtobufBroadcastPeer(host_,recv_port_);
-    std::cout << "created broadcast peer" << std::endl;
+    std::cout << "Starting Rockin Refbox" << std::endl;
+    peer_public_ = new ProtobufBroadcastPeer(host_, public_port_);
+
+    std::cout << "Created public peer" << std::endl;
+
     MessageRegister &message_register = peer_public_->message_register();
-    std::cout << "got message register" << std::endl;
     message_register.add_message_type<BeaconSignal>();
     message_register.add_message_type<BenchmarkState>();
     message_register.add_message_type<VersionInfo>();
@@ -33,12 +34,20 @@ RockinRefbox::RockinRefbox(const std::string &name, const std::string &team_name
     message_register.add_message_type<DrillingMachineStatus>();
     message_register.add_message_type<ConveyorBeltStatus>();
     message_register.add_message_type<Image>();
-//    message_register.add_message_type<BenchmarkFeedback>();
-    std::cout << "registered messages " << std::endl;
+    message_register.add_message_type<BenchmarkFeedback>();
+
+    std::cout << "Registered messages" << std::endl;
+
+    peer_team_ = new ProtobufBroadcastPeer(host_, private_port_, &message_register);
+    std::cout << "Created team peer" << std::endl;
+
     peer_public_->signal_received().connect(boost::bind(&RockinRefbox::handle_message, this, _1, _2, _3, _4));
     peer_public_->signal_recv_error().connect(boost::bind(&RockinRefbox::handle_recv_error,this, _1, _2));
     peer_public_->signal_send_error().connect(boost::bind(&RockinRefbox::handle_send_error, this, _1));
 
+    peer_team_->signal_received().connect(boost::bind(&RockinRefbox::handle_message, this, _1, _2, _3, _4));
+    peer_team_->signal_recv_error().connect(boost::bind(&RockinRefbox::handle_recv_error,this, _1, _2));
+    peer_team_->signal_send_error().connect(boost::bind(&RockinRefbox::handle_send_error, this, _1));
 }
 
 
@@ -51,14 +60,10 @@ RockinRefbox::~RockinRefbox()
 void RockinRefbox::start()
 {
     run_timer_ = true;
-  //  timer_ = new boost::asio::deadline_timer(io_service_:);
-  //  timer_->expires_from_now(boost::posix_time::milliseconds(1000));
-    //timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal, this));
-    while(true)
-    {
-        io_service_.run();   
-        io_service_.reset();
-    }
+    timer_ = new boost::asio::deadline_timer(io_service_:);
+    timer_->expires_from_now(boost::posix_time::milliseconds(1000));
+    timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal, this));
+    io_service_.run();   
 }
 
 void RockinRefbox::stop()
@@ -88,7 +93,7 @@ void RockinRefbox::send_beacon_signal()
     signal->set_peer_name(name_);
     signal->set_team_name(team_name_);
     signal->set_seq(++sequence_number_);
-    peer_public_->send(signal);
+    peer_team_->send(signal);
     
     if (run_timer_)
     {
