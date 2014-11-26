@@ -34,7 +34,15 @@ class RockinRefbox
 
         void start();
         void stop();
-        
+
+        void set_debug(bool value);
+
+        std::shared_ptr<BenchmarkState> get_benchmark_state();
+        std::shared_ptr<Inventory> get_inventory();
+        std::shared_ptr<OrderInfo> get_order();
+        std::shared_ptr<DrillingMachineStatus> get_drilling_machine_status();
+        std::shared_ptr<ConveyorBeltStatus> get_conveyor_belt_status();
+        std::shared_ptr<Image> get_image();
 
     private:
         void send_beacon_signal();
@@ -45,9 +53,11 @@ class RockinRefbox
         std::string host_;
         int private_port_;
         int public_port_;       
+
         unsigned long sequence_number_;
         ProtobufBroadcastPeer *peer_public_;
         ProtobufBroadcastPeer *peer_team_;
+
         boost::asio::deadline_timer *timer_;
         bool run_timer_;
         boost::asio::io_service io_service_;
@@ -60,5 +70,7 @@ class RockinRefbox
         std::shared_ptr<DrillingMachineStatus> drilling_machine_msg_;
         std::shared_ptr<ConveyorBeltStatus> conveyor_belt_msg_;
         std::shared_ptr<Image> image_msg_;
+
+        bool debug_mode_;
 };
 #endif
