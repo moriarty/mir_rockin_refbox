@@ -103,24 +103,31 @@ void RockinRefbox::handle_send_error(std::string msg)
 
 void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16_t component_id, uint16_t msg_type, std::shared_ptr<google::protobuf::Message> msg)
 {
-    if ((beacon_msg_ = std::dynamic_pointer_cast<BeaconSignal>(msg))) 
+    
+    std::shared_ptr<BeaconSignal> bs;
+    if ((bs = std::dynamic_pointer_cast<BeaconSignal>(msg))) 
     {
+        beacon_msg_ = bs;
         if (debug_mode_)
         {
             std::cout << "Detected robot: " << beacon_msg_->team_name() << " " << beacon_msg_->peer_name() << " (seq " << beacon_msg_->seq() << ")" << std::endl;
         }
     }
 
-    if ((version_msg_ = std::dynamic_pointer_cast<VersionInfo>(msg))) 
+    std::shared_ptr<VersionInfo> vi;
+    if ((vi = std::dynamic_pointer_cast<VersionInfo>(msg))) 
     {
+        version_msg_ = vi;
         if (debug_mode_)
         {
             std::cout << "VersionInfo received: " << version_msg_->version_string() << std::endl;
         }
     }
 
-    if ((benchmark_state_msg_ = std::dynamic_pointer_cast<BenchmarkState>(msg))) 
+    std::shared_ptr<BenchmarkState> bms;
+    if ((bms = std::dynamic_pointer_cast<BenchmarkState>(msg))) 
     {
+        benchmark_state_msg_ = bms;
         if (debug_mode_)
         {
             std::cout << "BenchmarkState received:" << std::endl;
@@ -155,8 +162,11 @@ void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16
         }
     }
 
-    if ((inventory_msg_ = std::dynamic_pointer_cast<Inventory>(msg))) 
+    std::shared_ptr<Inventory> in;
+    if ((in = std::dynamic_pointer_cast<Inventory>(msg))) 
     {
+        inventory_msg_ = in;
+        std::cout << "inventory received " << std::endl;
         if (debug_mode_)
         {
             std::cout << "Inventory received:" << std::endl;
@@ -171,8 +181,11 @@ void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16
         }
     }
 
-    if ((order_msg_ = std::dynamic_pointer_cast<OrderInfo>(msg)))
+    std::shared_ptr<OrderInfo> o;
+    if ((o = std::dynamic_pointer_cast<OrderInfo>(msg)))
     {
+        std::cout << "order received " << std::endl;
+        order_msg_ = o;
         if (debug_mode_)
         {
             std::cout << "OrderInfo received" << std::endl;
@@ -202,8 +215,10 @@ void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16
         }
     }
 
-    if ((drilling_machine_msg_ = std::dynamic_pointer_cast<DrillingMachineStatus>(msg)))
+    std::shared_ptr<DrillingMachineStatus> dms;
+    if ((dms = std::dynamic_pointer_cast<DrillingMachineStatus>(msg)))
     {
+        drilling_machine_msg_ = dms;
         if (debug_mode_)
         {
             std::cout << "Drilling machine status received: ";
@@ -218,8 +233,10 @@ void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16
         }
     }
 
-    if ((conveyor_belt_msg_ = std::dynamic_pointer_cast<ConveyorBeltStatus>(msg)))
+    std::shared_ptr<ConveyorBeltStatus> cbs;
+    if ((cbs = std::dynamic_pointer_cast<ConveyorBeltStatus>(msg)))
     {
+        conveyor_belt_msg_ = cbs;
         if (debug_mode_)
         {
             std::cout << "Conveyor belt status received: ";
@@ -231,8 +248,10 @@ void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16
         }
     }
 
-    if ((image_msg_ = std::dynamic_pointer_cast<Image>(msg)))
+    std::shared_ptr<Image> im;
+    if ((im = std::dynamic_pointer_cast<Image>(msg)))
     {
+        image_msg_ = im;
         if (debug_mode_)
         {
             std::cout << "Image received (width=" << image_msg_->width() << ", height=" << image_msg_->height() << ", step=" << image_msg_->step() <<")" << std::endl;
