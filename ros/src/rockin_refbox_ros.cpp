@@ -22,6 +22,7 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
 
     // ROS Subscribers
     event_in_sub_ = nh_->subscribe<std_msgs::String>("event_in", 1, &RockinRefboxRos::cbEventIn, this);
+    request_in_sub_ = nh_->subscribe<std_msgs::String>("request_in", 1, &RockinRefboxRos::cbRequestIn, this);
     conveyor_control_sub_ = nh_->subscribe<std_msgs::String>("conveyor_control", 1, &RockinRefboxRos::cbConveyorControl, this);
     drill_control_sub_ = nh_->subscribe<std_msgs::String>("drill_control", 1, &RockinRefboxRos::cbDrillControl, this);
     camera_control_sub_ = nh_->subscribe<std_msgs::String>("camera_control", 1, &RockinRefboxRos::cbCameraControl, this);
@@ -32,6 +33,7 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
     drill_status_pub_ = nh_->advertise<std_msgs::String>("drill_status", 1);
     camera_status_pub_ = nh_->advertise<std_msgs::String>("camera_status", 1);
     benchmark_state_pub_ = nh_->advertise<mir_rockin_refbox::BenchmarkState>("benchmark_state", 1);
+    refbox_task_pub_ = nh_->advertise<std_msgs::String>("refbox_task", 1);
     //camera_image_pub_ = nh_->advertise<std_msgs::String>("topic", 1);
 }
 
@@ -47,7 +49,6 @@ void RockinRefboxRos::initState()
 
 void RockinRefboxRos::idleState()
 {
-    // IF event_in_.dat
     if (event_in_ == "e_start") {
         state_ = RUNNING;
     } else {
@@ -65,9 +66,32 @@ void RockinRefboxRos::runningState()
 void RockinRefboxRos::handleRequest()
 {
     if (request_in_ == "r_state") {
-        std::shared_ptr<BenchmarkState> benchmark_sate = refbox_->get_benchmark_state();
-
+        std::shared_ptr<BenchmarkState> benchmark_state = refbox_->get_benchmark_state();
+        if (benchmark_state) {
+            mir_rockin_refbox::BenchmarkState bm_msg;
+            bm_msg.benchmark_state = benchmark_state->state();
+            benchmark_state_pub_.publish(bm_msg);
+            request_in_ = "";
+        }
     }
+    if (request_in_ == "r_task") {
+        std::shared_ptr<OrderInfo> order_info = refbox_->get_order();
+        std::shared_ptr<Inventory> inventory = refbox_->get_inventory();
+        if (order_info && inventory)
+        {
+            std_msgs::String task_spec;
+            task_spec.data = parseIntoRoboCupTask(order_info, inventory);
+            refbox_task_pub_.publish(task_spec);
+            request_in_ = "";
+        }
+    }
+}
+
+string RockinRefboxRos::parseIntoRoboCupTask(std::shared_ptr<OrderInfo> order_info, 
+    std::shared_ptr<Inventory> inventory)
+{
+    //TODO A LOT OF CRAP
+    return "BTT<initialsituation(<W01,(AX-07,AX-02)>);goalsituation(<S01,(AX-07,AX-02)>)>";
 }
 
 void RockinRefboxRos::executeCycle()

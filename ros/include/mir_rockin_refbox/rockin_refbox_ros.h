@@ -42,7 +42,10 @@ private:
     void cbConveyorControl(const std_msgs::String::ConstPtr& msg);
     void cbDrillControl(const std_msgs::String::ConstPtr& msg);
     void cbCameraControl(const std_msgs::String::ConstPtr& msg);
+    
     bool getRefboxConfigParams();
+    string parseIntoRoboCupTask(std::shared_ptr<OrderInfo> order_info, 
+        std::shared_ptr<Inventory> inventory);
 
     void initState();
     void idleState();
@@ -78,12 +81,14 @@ private:
     ros::Publisher camera_status_pub_;
     ros::Publisher camera_image_pub_;
     ros::Publisher benchmark_state_pub_;
+    ros::Publisher refbox_task_pub_;
 
     // ROS Subscribers
     ros::Subscriber event_in_sub_;
     ros::Subscriber conveyor_control_sub_;
     ros::Subscriber drill_control_sub_;
     ros::Subscriber camera_control_sub_;
+    ros::Subscriber request_in_sub_;
 
 };
 
