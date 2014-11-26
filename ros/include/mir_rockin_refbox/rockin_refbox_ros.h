@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <signal.h>
 
 #include <mir_rockin_refbox/rockin_refbox.h>
 
@@ -13,6 +14,9 @@ class RockinRefboxRos
 public:
     RockinRefboxRos(ros::NodeHandle &nh);
     ~RockinRefboxRos();
+
+    void signalHandler(int sig);
+
 
 private:
     // methods
@@ -50,8 +54,8 @@ private:
     ros::Publisher conveyor_status_pub_;
     ros::Publisher drill_status_pub_;
     ros::Publisher camera_status_pub_;
-    ros::Publisher camera_image_pub_;   
-    
+    ros::Publisher camera_image_pub_;
+
     // ROS Subscribers
     ros::Subscriber event_in_sub_;
     ros::Subscriber conveyor_control_sub_;

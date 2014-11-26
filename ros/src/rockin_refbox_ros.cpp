@@ -3,7 +3,7 @@
 RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
 {
     nh_ = &nh;
-    
+
     // ROS Params
     if (!this->getRefboxConfigParams())
     {
@@ -12,12 +12,18 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
     }
 
     //
-    refbox_ = new RockinRefbox(team_robot_, team_name_, refbox_ip_, 
-        refbox_port_, team_port_); 
+    refbox_ = new RockinRefbox(team_robot_, team_name_, refbox_ip_,
+        refbox_port_, team_port_);
+    if(!refbox_){
+        ROS_ERROR("new RockinRefbox creation failed!!!!");
+    }
+
+    signal(SIGINT, signalHandler);
+    refbox_->start();
 
     // ROS Subscribers
     event_in_sub_ = nh_->subscribe<std_msgs::String>("event_in", 1, &RockinRefboxRos::cbEventIn, this);
-    conveyor_control_sub_ = nh_->subscribe<std_msgs::String>("conveyor_control", 1, &RockinRefboxRos::cbConveyorControl, this); 
+    conveyor_control_sub_ = nh_->subscribe<std_msgs::String>("conveyor_control", 1, &RockinRefboxRos::cbConveyorControl, this);
     drill_control_sub_ = nh_->subscribe<std_msgs::String>("drill_control", 1, &RockinRefboxRos::cbDrillControl, this);
     camera_control_sub_ = nh_->subscribe<std_msgs::String>("camera_control", 1, &RockinRefboxRos::cbCameraControl, this);
 
@@ -30,6 +36,15 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
 }
 
 RockinRefboxRos::~RockinRefboxRos() { }
+
+void RockinRefboxRos::signalHandler()
+{
+    if(refbox_)
+    {
+        refbox_->stop();
+    }
+    ros::shutdown();
+}
 
 bool RockinRefboxRos::getRefboxConfigParams()
 {
@@ -80,7 +95,7 @@ bool RockinRefboxRos::getRefboxConfigParams()
         return false;
     }
     return true;
-    
+
 }
 
 void RockinRefboxRos::cbEventIn(const std_msgs::String::ConstPtr& msg)
