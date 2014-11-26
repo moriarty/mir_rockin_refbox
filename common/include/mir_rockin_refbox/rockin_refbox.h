@@ -37,5 +37,6 @@ class RockinRefbox
         ProtobufBroadcastPeer *peer_public_;
         boost::asio::deadline_timer *timer_;
         bool run_timer_;
+        boost::asio::io_service io_service_;
 };
 #endif

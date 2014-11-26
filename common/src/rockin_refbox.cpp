@@ -21,22 +21,19 @@ RockinRefbox::RockinRefbox(const std::string &name, const std::string &team_name
                          run_timer_(false)
 {
     std::cout << "starting rockin ref box" << std::endl;
-    peer_public_ = new ProtobufBroadcastPeer(host_,recv_port_,send_port_);
+    peer_public_ = new ProtobufBroadcastPeer(host_,recv_port_);
     std::cout << "created broadcast peer" << std::endl;
     MessageRegister &message_register = peer_public_->message_register();
     std::cout << "got message register" << std::endl;
     message_register.add_message_type<BeaconSignal>();
     message_register.add_message_type<BenchmarkState>();
-    /*
     message_register.add_message_type<VersionInfo>();
     message_register.add_message_type<Inventory>();
     message_register.add_message_type<OrderInfo>();
     message_register.add_message_type<DrillingMachineStatus>();
     message_register.add_message_type<ConveyorBeltStatus>();
     message_register.add_message_type<Image>();
-    message_register.add_message_type<BenchmarkFeedback>();
-,
-    */
+//    message_register.add_message_type<BenchmarkFeedback>();
     std::cout << "registered messages " << std::endl;
     peer_public_->signal_received().connect(boost::bind(&RockinRefbox::handle_message, this, _1, _2, _3, _4));
     peer_public_->signal_recv_error().connect(boost::bind(&RockinRefbox::handle_recv_error,this, _1, _2));
@@ -54,11 +51,14 @@ RockinRefbox::~RockinRefbox()
 void RockinRefbox::start()
 {
     run_timer_ = true;
-    boost::asio::io_service io_service;
-    timer_ = new boost::asio::deadline_timer(io_service);
-    timer_->expires_from_now(boost::posix_time::milliseconds(1000));
-    timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal, this));
-    io_service.run();   
+  //  timer_ = new boost::asio::deadline_timer(io_service_:);
+  //  timer_->expires_from_now(boost::posix_time::milliseconds(1000));
+    //timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal, this));
+    while(true)
+    {
+        io_service_.run();   
+        io_service_.reset();
+    }
 }
 
 void RockinRefbox::stop()
@@ -73,7 +73,7 @@ void RockinRefbox::stop()
 
 void RockinRefbox::send_beacon_signal()
 {
-    std::cout << "sending beacon" << std::endl;
+ //   std::cout << "sending beacon" << std::endl;
     boost::posix_time::ptime now(boost::posix_time::microsec_clock::universal_time());
     std::shared_ptr<BeaconSignal> signal(new BeaconSignal());
     Time *time = signal->mutable_time();
@@ -89,10 +89,13 @@ void RockinRefbox::send_beacon_signal()
     signal->set_team_name(team_name_);
     signal->set_seq(++sequence_number_);
     peer_public_->send(signal);
-
-    timer_->expires_at(timer_->expires_at()
-          + boost::posix_time::milliseconds(1000));
-    timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal,this));
+    
+    if (run_timer_)
+    {
+        timer_->expires_at(timer_->expires_at()
+            + boost::posix_time::milliseconds(1000));
+        timer_->async_wait(boost::bind(&RockinRefbox::send_beacon_signal,this));
+    }
 }
 
 void RockinRefbox::handle_recv_error(boost::asio::ip::udp::endpoint &endpoint, std::string msg)
