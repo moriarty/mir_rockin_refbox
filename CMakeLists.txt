@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(mir_rockin_refbox)
 
-find_package(catkin REQUIRED
+find_package(catkin REQUIRED    
   COMPONENTS
     raw_refbox_comm
     roscpp
     std_msgs
 )
 
+find_package(Protobuf REQUIRED)
 #find_package(protobuf_catkin REQUIRED)
 
 ## From roah_rsbb_comm_ros
@@ -31,11 +32,13 @@ include_directories(
   ros/include
   common/include
   ${catkin_INCLUDE_DIRS}
+  ${Protobuf_INCLUDE_DIRS}
 )
 
-add_executable(rockin_refbox_ros_node
+add_executable(rockin_refbox_ros_node  
   ros/src/rockin_refbox_ros_node.cpp
   ros/src/rockin_refbox_ros.cpp
+  common/src/rockin_refbox.cpp
 )
 
 add_dependencies(rockin_refbox_ros_node
@@ -43,6 +46,9 @@ add_dependencies(rockin_refbox_ros_node
 )
 
 target_link_libraries(rockin_refbox_ros_node
+  protobuf_comm
+  raw_refbox_msgs
+  ${Protobuf_LIBRARIES}
   ${catkin_LIBRARIES}
 )
 
