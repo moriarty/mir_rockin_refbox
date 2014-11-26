@@ -1,4 +1,6 @@
 #include "mir_rockin_refbox/rockin_refbox_ros.h"
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
 {
@@ -93,9 +95,107 @@ string RockinRefboxRos::parseIntoRoboCupTask(std::shared_ptr<OrderInfo> order_in
     std::shared_ptr<Inventory> inventory)
 {
     //TODO A LOT OF CRAP
-    return "BTT<initialsituation(<W01,(AX-07,AX-02)>);goalsituation(<S01,(AX-07,AX-02)>)>";
+    std::map<std::string, std::vector<std::string> > dest_obj;
+    std::map<std::string, std::vector<std::string> > source_obj;
+    for (int i = 0; i < order_info->orders_size(); i++)
+    {
+        const Order &order = order_info->orders(i);
+        for (int cnt = 0; cnt < order.quantity_requested(); cnt++)
+        {
+            if (order.has_container()) {
+                std::string loc = getLocation(inventory, order.container().description());
+                remap(loc);
+                dest_obj[loc];
+                dest_obj[loc].push_back(order.object().description());
+            }
+            else
+            {
+                std::string loc = order.destination().description();
+                remap(loc);
+                dest_obj[loc];
+                dest_obj[loc].push_back(order.object().description());
+            }
+            std::string loc = getLocation(inventory, order.object().description());
+            remap(loc);
+            source_obj[loc];
+            source_obj[loc].push_back(order.object().description());
+        }
+
+    }
+    std::string task_spec = "BTT<initialsituation(";
+    std::map<std::string, std::vector<std::string> >::iterator map_iter;
+    for (map_iter = source_obj.begin(); map_iter != source_obj.end(); ++map_iter)
+    {
+        // add source location to task spec
+        task_spec += "<";
+        task_spec += map_iter->first + ",(";
+        std::vector<std::string> v = map_iter->second;
+        // add objects at source location
+        for (int i = 0; i < v.size(); i++)
+        {
+            if (i != 0)
+            {
+                task_spec += ",";
+            }
+            task_spec += v.at(i);
+        }
+        task_spec += ")>";
+    }
+    task_spec += ");goalsituation(";
+
+    for (map_iter = dest_obj.begin(); map_iter != dest_obj.end(); ++map_iter)
+    {
+        // add destination location to task spec
+        task_spec += "<";
+        task_spec += map_iter->first + ",line(";
+        std::vector<std::string> v = map_iter->second;
+        // add objects at source location
+        for (int i = 0; i < v.size(); i++)
+        {
+            if (i != 0)
+            {
+                task_spec += ",";
+            }
+            task_spec += v.at(i);
+        }
+        task_spec += ")>";
+    }
+    task_spec += ")>";
+    
+    std::cout << "TASK SPEC: " << task_spec << std::endl;
+    
+    return task_spec;
 }
 
+
+void RockinRefboxRos::remap(std::string &location)
+{
+    boost::replace_all(location, "SHELF-", "S");
+    boost::replace_all(location, "WORKSTATION-", "W");
+}
+
+std::string RockinRefboxRos::getLocation(std::shared_ptr<Inventory> inventory, std::string object_name)
+{
+    for (int i = 0; i < inventory->items_size(); i++)
+    {
+        const Inventory_Item &item = inventory->items(i);
+        if (item.object().description() == object_name)
+        {
+            if (item.has_location())
+            {
+                return item.location().description();
+            }
+            else if (item.has_container())
+            {
+                return getLocation(inventory, item.container().description());                
+            }
+            else
+            {
+                return "";
+            }
+        }
+    }
+}
 void RockinRefboxRos::executeCycle()
 {
     switch (state_) {
