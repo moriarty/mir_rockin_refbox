@@ -117,7 +117,7 @@ bool RockinRefboxRos::startRefbox()
 {
     if(refbox_)
     {
-        refbox_->start();
+       // refbox_->start();
         return true;
     }
     return false;
@@ -148,7 +148,7 @@ bool RockinRefboxRos::getRefboxConfigParams()
         return false;
     }
     // REFBOX PORT
-    if (nh_->hasParam("refbox/port"))
+    if (nh_->hasParam("refbox/public_port"))
     {
         nh_->param<int>("refbox/public_port", refbox_public_port_, 4446);
         ROS_INFO("Refbox Port: %d", refbox_public_port_);
@@ -180,7 +180,7 @@ bool RockinRefboxRos::getRefboxConfigParams()
         nh_->param<int>("team/private_port", team_private_port_, 4446);
         ROS_INFO("Team port %d", team_private_port_);
     } else {
-        ROS_ERROR("no team/port param");
+        ROS_ERROR("no team/private_port param");
         return false;
     }
     return true;
