@@ -70,6 +70,7 @@ private:
 
     // internal state variables
     State state_;
+    bool camera_command_sent_;
 
     // ROS params
     string refbox_ip_;

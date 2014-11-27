@@ -9,9 +9,11 @@ find_package(catkin REQUIRED
     std_msgs
     sensor_msgs
     image_transport
+    cv_bridge
 )
 
 find_package(Protobuf REQUIRED)
+find_package(OpenCV REQUIRED)
 
 add_definitions("-std=c++0x")
 find_package(Boost REQUIRED)
@@ -46,6 +48,7 @@ include_directories(
   common/include
   ${catkin_INCLUDE_DIRS}
   ${Protobuf_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 add_executable(rockin_refbox_ros_node
@@ -63,6 +66,7 @@ target_link_libraries(rockin_refbox_ros_node
   raw_refbox_msgs
   ${Protobuf_LIBRARIES}
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
 )
 
 install(TARGETS rockin_refbox_ros_node
