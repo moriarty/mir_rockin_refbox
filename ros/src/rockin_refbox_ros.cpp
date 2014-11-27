@@ -1,4 +1,4 @@
-#include "mir_rockin_refbox/rockin_refbox_ros.h"
+#include <mir_rockin_refbox/rockin_refbox_ros.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <sensor_msgs/image_encodings.h>
@@ -31,6 +31,7 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh) : it_(nh), camera_command_
     request_in_sub_ = nh_->subscribe<std_msgs::String>("request_in", 1, &RockinRefboxRos::cbRequestIn, this);
     device_control_sub_ = nh_->subscribe<std_msgs::String>("device_control", 1, &RockinRefboxRos::cbDeviceControl, this);
     camera_control_sub_ = nh_->subscribe<std_msgs::String>("camera_control", 1, &RockinRefboxRos::cbCameraControl, this);
+    benchmark_feedback_fbm1_sub_ = nh_->subscribe("benchmark_feedback_fbm1", 1, &RockinRefboxRos::cbBenchmarkFeedbackFBM1, this);
 
     // ROS Publishers
     event_out_pub_ = nh_->advertise<std_msgs::String>("event_out", 1);
@@ -162,6 +163,22 @@ void RockinRefboxRos::handleRequest()
     {
         refbox_->send_drilling_machine_command(true);
         command_in_ = "";
+    }
+    if (service_fbm1_)
+    {
+        BenchmarkFeedback bf;
+        geometry_msgs::Pose p = benchmark_feedback_fbm1_.object_pose;
+        bf.mutable_object_pose()->mutable_position()->set_x(p.position.x);
+        bf.mutable_object_pose()->mutable_position()->set_y(p.position.y);
+        bf.mutable_object_pose()->mutable_position()->set_z(p.position.z);
+        bf.mutable_object_pose()->mutable_orientation()->set_w(p.orientation.w);
+        bf.mutable_object_pose()->mutable_orientation()->set_x(p.orientation.x);
+        bf.mutable_object_pose()->mutable_orientation()->set_y(p.orientation.y);
+        bf.mutable_object_pose()->mutable_orientation()->set_z(p.orientation.z);
+        bf.set_object_instance_name(benchmark_feedback_fbm1_.object_instance_name);
+        bf.set_object_class_name(benchmark_feedback_fbm1_.object_class_name);
+        refbox_->send_benchmark_feedback(bf);
+        service_fbm1_ = false;
     }
 }
 
@@ -376,4 +393,10 @@ void RockinRefboxRos::cbDeviceControl(const std_msgs::String::ConstPtr& msg)
 void RockinRefboxRos::cbCameraControl(const std_msgs::String::ConstPtr& msg)
 {
     camera_control_ = msg->data;
+}
+
+void RockinRefboxRos::cbBenchmarkFeedbackFBM1(const mir_rockin_refbox::BenchmarkFeedbackFBM1 &msg)
+{
+    benchmark_feedback_fbm1_ = msg;
+    service_fbm1_ = true;
 }

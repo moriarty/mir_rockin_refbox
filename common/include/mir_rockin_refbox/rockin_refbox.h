@@ -50,6 +50,8 @@ class RockinRefbox
         void send_drilling_machine_command(bool down);
         void send_camera_command();
 
+        void send_benchmark_feedback(BenchmarkFeedback bf);
+
     private:
         void send_beacon_signal();
 

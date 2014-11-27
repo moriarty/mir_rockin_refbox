@@ -10,6 +10,7 @@
 
 #include <mir_rockin_refbox/rockin_refbox.h>
 #include <mir_rockin_refbox/BenchmarkState.h>
+#include <mir_rockin_refbox/BenchmarkFeedbackFBM1.h>
 
 using std::string;
 using std::signal;
@@ -44,6 +45,7 @@ private:
     void cbRequestIn(const std_msgs::String::ConstPtr& msg);
     void cbDeviceControl(const std_msgs::String::ConstPtr& msg);
     void cbCameraControl(const std_msgs::String::ConstPtr& msg);
+    void cbBenchmarkFeedbackFBM1(const mir_rockin_refbox::BenchmarkFeedbackFBM1 &msg);
     
     bool getRefboxConfigParams();
     string parseIntoRoboCupTask(std::shared_ptr<OrderInfo> order_info, 
@@ -66,11 +68,13 @@ private:
     string request_in_;
     string command_in_;
     string camera_control_;
+    mir_rockin_refbox::BenchmarkFeedbackFBM1 benchmark_feedback_fbm1_;
     //TODO FEEDBACK TO PASS TO REFBOX ?
 
     // internal state variables
     State state_;
     bool camera_command_sent_;
+    bool service_fbm1_;
 
     // ROS params
     string refbox_ip_;
@@ -93,6 +97,7 @@ private:
     ros::Subscriber device_control_sub_;
     ros::Subscriber camera_control_sub_;
     ros::Subscriber request_in_sub_;
+    ros::Subscriber benchmark_feedback_fbm1_sub_;
 
 };
 

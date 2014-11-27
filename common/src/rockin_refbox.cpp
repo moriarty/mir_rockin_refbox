@@ -337,3 +337,8 @@ void RockinRefbox::send_camera_command()
     CameraCommand cam_cmd;
     peer_team_->send(cam_cmd);
 }
+
+void RockinRefbox::send_benchmark_feedback(BenchmarkFeedback bf)
+{
+    peer_team_->send(bf);
+}

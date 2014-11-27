@@ -8,6 +8,7 @@ find_package(catkin REQUIRED
     roscpp
     std_msgs
     sensor_msgs
+    geometry_msgs
     image_transport
     cv_bridge
 )
@@ -21,6 +22,7 @@ find_package(Boost REQUIRED)
 add_message_files(
   FILES
     BenchmarkState.msg
+    BenchmarkFeedbackFBM1.msg
 )
 
 
@@ -28,6 +30,7 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 #catkin_python_setup()
