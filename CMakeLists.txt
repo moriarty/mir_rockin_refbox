@@ -3,19 +3,30 @@ project(mir_rockin_refbox)
 
 find_package(catkin REQUIRED
   COMPONENTS
+    message_generation
     raw_refbox_comm
     roscpp
     std_msgs
 )
 
-#find_package(protobuf_catkin REQUIRED)
+find_package(Protobuf REQUIRED)
 
-## From roah_rsbb_comm_ros
 add_definitions("-std=c++0x")
 find_package(Boost REQUIRED)
-## End From
 
-catkin_python_setup()
+add_message_files(
+  FILES
+    BenchmarkState.msg
+)
+
+
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
+#catkin_python_setup()
 
 catkin_package(
   INCLUDE_DIRS
@@ -31,11 +42,13 @@ include_directories(
   ros/include
   common/include
   ${catkin_INCLUDE_DIRS}
+  ${Protobuf_INCLUDE_DIRS}
 )
 
 add_executable(rockin_refbox_ros_node
   ros/src/rockin_refbox_ros_node.cpp
   ros/src/rockin_refbox_ros.cpp
+  common/src/rockin_refbox.cpp
 )
 
 add_dependencies(rockin_refbox_ros_node
@@ -43,6 +56,9 @@ add_dependencies(rockin_refbox_ros_node
 )
 
 target_link_libraries(rockin_refbox_ros_node
+  protobuf_comm
+  raw_refbox_msgs
+  ${Protobuf_LIBRARIES}
   ${catkin_LIBRARIES}
 )
 
