@@ -3,6 +3,9 @@
 
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <sensor_msgs/CompressedImage.h>
+#include <sensor_msgs/Image.h>
+#include <image_transport/image_transport.h>
 #include <csignal>
 
 #include <mir_rockin_refbox/rockin_refbox.h>
@@ -56,6 +59,7 @@ private:
     // variables
     RockinRefbox* refbox_;
     ros::NodeHandle* nh_;
+    image_transport::ImageTransport it_;
 
     // Data from ROS topics
     string event_in_;
@@ -79,7 +83,7 @@ private:
     ros::Publisher conveyor_status_pub_;
     ros::Publisher drill_status_pub_;
     ros::Publisher camera_status_pub_;
-    ros::Publisher camera_image_pub_;
+    image_transport::Publisher camera_image_pub_;
     ros::Publisher benchmark_state_pub_;
     ros::Publisher refbox_task_pub_;
 

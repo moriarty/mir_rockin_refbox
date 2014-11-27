@@ -2,7 +2,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
-RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
+RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh) : it_(nh)
 {
     nh_ = &nh;
 
@@ -35,7 +35,9 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
     camera_status_pub_ = nh_->advertise<std_msgs::String>("camera_status", 1);
     benchmark_state_pub_ = nh_->advertise<mir_rockin_refbox::BenchmarkState>("benchmark_state", 1);
     refbox_task_pub_ = nh_->advertise<std_msgs::String>("refbox_task", 1);
-    //camera_image_pub_ = nh_->advertise<std_msgs::String>("topic", 1);
+    //camera_image_pub_ = nh_->advertise<sensor_msgs::CompressedImage>("", 1);
+    camera_image_pub_ = it_.advertise("camera_image", 1);
+
 }
 
 RockinRefboxRos::~RockinRefboxRos()

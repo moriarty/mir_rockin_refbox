@@ -1,5 +1,5 @@
 refbox:
-    ip: 192.168.2.107
+    ip: 192.168.1.255
     public_port: 4444
 
 team:

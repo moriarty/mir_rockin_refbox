@@ -7,6 +7,8 @@ find_package(catkin REQUIRED
     raw_refbox_comm
     roscpp
     std_msgs
+    sensor_msgs
+    image_transport
 )
 
 find_package(Protobuf REQUIRED)
@@ -36,6 +38,7 @@ catkin_package(
     roscpp
     rospy
     std_msgs
+    sensor_msgs
 )
 
 include_directories(
