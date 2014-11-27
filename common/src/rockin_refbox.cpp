@@ -18,7 +18,7 @@ RockinRefbox::RockinRefbox(const std::string &name, const std::string &team_name
     message_register.add_message_type<OrderInfo>();
     message_register.add_message_type<DrillingMachineStatus>();
     message_register.add_message_type<ConveyorBeltStatus>();
-    message_register.add_message_type<Image>();
+    message_register.add_message_type<CompressedImage>();
     message_register.add_message_type<BenchmarkFeedback>();
 
     std::cout << "Registered messages" << std::endl;
@@ -166,7 +166,6 @@ void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16
     if ((in = std::dynamic_pointer_cast<Inventory>(msg))) 
     {
         inventory_msg_ = in;
-        std::cout << "inventory received " << std::endl;
         if (debug_mode_)
         {
             std::cout << "Inventory received:" << std::endl;
@@ -184,7 +183,6 @@ void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16
     std::shared_ptr<OrderInfo> o;
     if ((o = std::dynamic_pointer_cast<OrderInfo>(msg)))
     {
-        std::cout << "order received " << std::endl;
         order_msg_ = o;
         if (debug_mode_)
         {
@@ -248,13 +246,14 @@ void RockinRefbox::handle_message(boost::asio::ip::udp::endpoint &sender, uint16
         }
     }
 
-    std::shared_ptr<Image> im;
-    if ((im = std::dynamic_pointer_cast<Image>(msg)))
+    std::shared_ptr<CompressedImage> im;
+    if ((im = std::dynamic_pointer_cast<CompressedImage>(msg)))
     {
         image_msg_ = im;
+        std::cout << "received compressed image " << std::endl;
         if (debug_mode_)
         {
-            std::cout << "Image received (width=" << image_msg_->width() << ", height=" << image_msg_->height() << ", step=" << image_msg_->step() <<")" << std::endl;
+            std::cout << "CompressedImage received (format=" << image_msg_->format() <<")" << std::endl;
         }
     }
 
@@ -285,7 +284,7 @@ std::shared_ptr<ConveyorBeltStatus> RockinRefbox::get_conveyor_belt_status()
 {
     return conveyor_belt_msg_;
 }
-std::shared_ptr<Image> RockinRefbox::get_image()
+std::shared_ptr<CompressedImage> RockinRefbox::get_image()
 {
     return image_msg_;
 }
@@ -293,13 +292,14 @@ std::shared_ptr<Image> RockinRefbox::get_image()
 void RockinRefbox::send_conveyor_belt_command(bool on)
 {
     ConveyorBeltCommand conveyor_belt_command;
-
+/*
     if ((conveyor_belt_msg_->state() == START && on) || (conveyor_belt_msg_->state() == STOP && !on))
     {
         return;      
     }
     else
     {
+        */
         if (on)
         {
             conveyor_belt_command.set_command(START);
@@ -309,7 +309,7 @@ void RockinRefbox::send_conveyor_belt_command(bool on)
             conveyor_belt_command.set_command(STOP);
         }
         peer_team_->send(conveyor_belt_command);
-    }
+ //   }
 
 }
 
@@ -319,14 +319,14 @@ void RockinRefbox::send_drilling_machine_command(bool down)
     DrillingMachineStatus::State state = drilling_machine_msg_->state();    
     if (down)
     {
-        if (state == DrillingMachineStatus::AT_BOTTOM) return;
-        if (state == DrillingMachineStatus::MOVING_DOWN) return;        
+ //       if (state == DrillingMachineStatus::AT_BOTTOM) return;
+ //       if (state == DrillingMachineStatus::MOVING_DOWN) return;        
         drilling_machine_command.set_command(DrillingMachineCommand::MOVE_DOWN);
     }
     else
     {
-        if (state == DrillingMachineStatus::AT_TOP) return;
-        if (state == DrillingMachineStatus::MOVING_UP) return;
+ //       if (state == DrillingMachineStatus::AT_TOP) return;
+ //       if (state == DrillingMachineStatus::MOVING_UP) return;
         drilling_machine_command.set_command(DrillingMachineCommand::MOVE_UP);
     }
     peer_team_->send(drilling_machine_command);

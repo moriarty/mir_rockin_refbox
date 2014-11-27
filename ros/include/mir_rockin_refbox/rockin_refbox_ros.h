@@ -3,6 +3,9 @@
 
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <sensor_msgs/CompressedImage.h>
+#include <sensor_msgs/Image.h>
+#include <image_transport/image_transport.h>
 #include <csignal>
 
 #include <mir_rockin_refbox/rockin_refbox.h>
@@ -39,8 +42,7 @@ private:
 
     void cbEventIn(const std_msgs::String::ConstPtr& msg);
     void cbRequestIn(const std_msgs::String::ConstPtr& msg);
-    void cbConveyorControl(const std_msgs::String::ConstPtr& msg);
-    void cbDrillControl(const std_msgs::String::ConstPtr& msg);
+    void cbDeviceControl(const std_msgs::String::ConstPtr& msg);
     void cbCameraControl(const std_msgs::String::ConstPtr& msg);
     
     bool getRefboxConfigParams();
@@ -57,17 +59,18 @@ private:
     // variables
     RockinRefbox* refbox_;
     ros::NodeHandle* nh_;
+    image_transport::ImageTransport it_;
 
     // Data from ROS topics
     string event_in_;
     string request_in_;
-    string conveyor_control_;
-    string drill_control_;
+    string command_in_;
     string camera_control_;
     //TODO FEEDBACK TO PASS TO REFBOX ?
 
     // internal state variables
     State state_;
+    bool camera_command_sent_;
 
     // ROS params
     string refbox_ip_;
@@ -81,14 +84,13 @@ private:
     ros::Publisher conveyor_status_pub_;
     ros::Publisher drill_status_pub_;
     ros::Publisher camera_status_pub_;
-    ros::Publisher camera_image_pub_;
+    image_transport::Publisher camera_image_pub_;
     ros::Publisher benchmark_state_pub_;
     ros::Publisher refbox_task_pub_;
 
     // ROS Subscribers
     ros::Subscriber event_in_sub_;
-    ros::Subscriber conveyor_control_sub_;
-    ros::Subscriber drill_control_sub_;
+    ros::Subscriber device_control_sub_;
     ros::Subscriber camera_control_sub_;
     ros::Subscriber request_in_sub_;
 

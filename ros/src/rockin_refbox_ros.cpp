@@ -1,8 +1,12 @@
 #include "mir_rockin_refbox/rockin_refbox_ros.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <sensor_msgs/image_encodings.h>
+#include <opencv2/opencv.hpp>
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/highgui/highgui.hpp>
 
-RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
+RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh) : it_(nh), camera_command_sent_(false)
 {
     nh_ = &nh;
 
@@ -25,8 +29,7 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
     // ROS Subscribers
     event_in_sub_ = nh_->subscribe<std_msgs::String>("event_in", 1, &RockinRefboxRos::cbEventIn, this);
     request_in_sub_ = nh_->subscribe<std_msgs::String>("request_in", 1, &RockinRefboxRos::cbRequestIn, this);
-    conveyor_control_sub_ = nh_->subscribe<std_msgs::String>("conveyor_control", 1, &RockinRefboxRos::cbConveyorControl, this);
-    drill_control_sub_ = nh_->subscribe<std_msgs::String>("drill_control", 1, &RockinRefboxRos::cbDrillControl, this);
+    device_control_sub_ = nh_->subscribe<std_msgs::String>("device_control", 1, &RockinRefboxRos::cbDeviceControl, this);
     camera_control_sub_ = nh_->subscribe<std_msgs::String>("camera_control", 1, &RockinRefboxRos::cbCameraControl, this);
 
     // ROS Publishers
@@ -36,7 +39,9 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
     camera_status_pub_ = nh_->advertise<std_msgs::String>("camera_status", 1);
     benchmark_state_pub_ = nh_->advertise<mir_rockin_refbox::BenchmarkState>("benchmark_state", 1);
     refbox_task_pub_ = nh_->advertise<std_msgs::String>("refbox_task", 1);
-    //camera_image_pub_ = nh_->advertise<std_msgs::String>("topic", 1);
+    //camera_image_pub_ = nh_->advertise<sensor_msgs::CompressedImage>("", 1);
+    camera_image_pub_ = it_.advertise("camera_image", 1);
+
 }
 
 RockinRefboxRos::~RockinRefboxRos()
@@ -88,6 +93,75 @@ void RockinRefboxRos::handleRequest()
             refbox_task_pub_.publish(task_spec);
             request_in_ = "";
         }
+    }
+    if (request_in_ == "r_image")
+    {
+        ROS_INFO("Handling r_image request");
+        if (!camera_command_sent_)
+        {
+            refbox_->send_camera_command();
+            ROS_INFO("Sent camera command");
+            camera_command_sent_ = true;
+        }    
+        std::shared_ptr<CompressedImage> image = refbox_->get_image();
+        if (image)
+        {
+
+/*
+            sensor_msgs::CompressedImage image_msg;
+            image_msg.data.resize(image->data().size());
+            memcpy(&image_msg.data[0], image->data().c_str(), image->data().size());
+
+            std::ofstream ostr;
+            ostr.open("/home/alex/Desktop/foo/img.jpg");
+            ostr << image->data();
+            ostr.close();
+
+
+            //image_msg.data = std::vector<uint8_t>(image->data().size(), image->data().c_str());
+            //image_msg.data[0] = *(image->data().c_str());
+            //image_msg.format = image->format();
+            image_msg.format = "jpeg compressed
+             bgr8";
+
+             */
+
+             cv::Mat opencv_img;
+             std::vector<uchar> buffer_;
+
+             for(size_t i = 0; i < image->data().size(); ++i)
+                buffer_.push_back(image->data()[i]);
+
+            cv::imdecode(cv::Mat(buffer_), CV_LOAD_IMAGE_COLOR, &opencv_img);
+            cv_bridge::CvImage frame_msg;
+            frame_msg.encoding = sensor_msgs::image_encodings::BGR8;
+            frame_msg.image = opencv_img;
+
+
+            camera_image_pub_.publish(frame_msg.toImageMsg());
+            request_in_ = "";
+            camera_command_sent_ = false;
+        }
+    }
+    if (command_in_ == "conveyor_on")
+    {
+        refbox_->send_conveyor_belt_command(true);
+        command_in_ = "";
+    }
+    if (command_in_ == "conveyor_off")
+    {
+        refbox_->send_conveyor_belt_command(false);
+        command_in_ = "";
+    }
+    if (command_in_ == "drill_up")
+    {
+        refbox_->send_drilling_machine_command(false);
+        command_in_ = "";
+    }
+    if (command_in_ == "drill_down")
+    {
+        refbox_->send_drilling_machine_command(true);
+        command_in_ = "";
     }
 }
 
@@ -295,13 +369,9 @@ void RockinRefboxRos::cbRequestIn(const std_msgs::String::ConstPtr& msg)
 {
     request_in_ = msg->data;
 }
-void RockinRefboxRos::cbConveyorControl(const std_msgs::String::ConstPtr& msg)
+void RockinRefboxRos::cbDeviceControl(const std_msgs::String::ConstPtr& msg)
 {
-    conveyor_control_ = msg->data;
-}
-void RockinRefboxRos::cbDrillControl(const std_msgs::String::ConstPtr& msg)
-{
-    drill_control_ = msg->data;
+    command_in_ = msg->data;
 }
 void RockinRefboxRos::cbCameraControl(const std_msgs::String::ConstPtr& msg)
 {

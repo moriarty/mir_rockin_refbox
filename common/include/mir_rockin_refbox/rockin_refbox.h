@@ -16,6 +16,7 @@
 #include <raw_refbox_comm/ConveyorBelt.pb.h>
 #include <raw_refbox_comm/Camera.pb.h>
 #include <raw_refbox_comm/Image.pb.h>
+#include <raw_refbox_comm/CompressedImage.pb.h>
 #include <raw_refbox_comm/BenchmarkFeedback.pb.h>
 #include <raw_refbox_comm/Time.pb.h>
 using namespace protobuf_comm;
@@ -43,7 +44,7 @@ class RockinRefbox
         std::shared_ptr<OrderInfo> get_order();
         std::shared_ptr<DrillingMachineStatus> get_drilling_machine_status();
         std::shared_ptr<ConveyorBeltStatus> get_conveyor_belt_status();
-        std::shared_ptr<Image> get_image();
+        std::shared_ptr<CompressedImage> get_image();
 
         void send_conveyor_belt_command(bool on);        
         void send_drilling_machine_command(bool down);
@@ -74,7 +75,7 @@ class RockinRefbox
         std::shared_ptr<OrderInfo> order_msg_;
         std::shared_ptr<DrillingMachineStatus> drilling_machine_msg_;
         std::shared_ptr<ConveyorBeltStatus> conveyor_belt_msg_;
-        std::shared_ptr<Image> image_msg_;
+        std::shared_ptr<CompressedImage> image_msg_;
 
         bool debug_mode_;
 };
