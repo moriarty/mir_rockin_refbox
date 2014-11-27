@@ -25,8 +25,7 @@ RockinRefboxRos::RockinRefboxRos(ros::NodeHandle &nh)
     // ROS Subscribers
     event_in_sub_ = nh_->subscribe<std_msgs::String>("event_in", 1, &RockinRefboxRos::cbEventIn, this);
     request_in_sub_ = nh_->subscribe<std_msgs::String>("request_in", 1, &RockinRefboxRos::cbRequestIn, this);
-    conveyor_control_sub_ = nh_->subscribe<std_msgs::String>("conveyor_control", 1, &RockinRefboxRos::cbConveyorControl, this);
-    drill_control_sub_ = nh_->subscribe<std_msgs::String>("drill_control", 1, &RockinRefboxRos::cbDrillControl, this);
+    device_control_sub_ = nh_->subscribe<std_msgs::String>("device_control", 1, &RockinRefboxRos::cbDeviceControl, this);
     camera_control_sub_ = nh_->subscribe<std_msgs::String>("camera_control", 1, &RockinRefboxRos::cbCameraControl, this);
 
     // ROS Publishers
@@ -88,6 +87,26 @@ void RockinRefboxRos::handleRequest()
             refbox_task_pub_.publish(task_spec);
             request_in_ = "";
         }
+    }
+    if (command_in_ == "conveyor_on")
+    {
+        refbox_->send_conveyor_belt_command(true);
+        command_in_ = "";
+    }
+    if (command_in_ == "conveyor_off")
+    {
+        refbox_->send_conveyor_belt_command(false);
+        command_in_ = "";
+    }
+    if (command_in_ == "drill_up")
+    {
+        refbox_->send_drilling_machine_command(false);
+        command_in_ = "";
+    }
+    if (command_in_ == "drill_down")
+    {
+        refbox_->send_drilling_machine_command(true);
+        command_in_ = "";
     }
 }
 
@@ -295,13 +314,9 @@ void RockinRefboxRos::cbRequestIn(const std_msgs::String::ConstPtr& msg)
 {
     request_in_ = msg->data;
 }
-void RockinRefboxRos::cbConveyorControl(const std_msgs::String::ConstPtr& msg)
+void RockinRefboxRos::cbDeviceControl(const std_msgs::String::ConstPtr& msg)
 {
-    conveyor_control_ = msg->data;
-}
-void RockinRefboxRos::cbDrillControl(const std_msgs::String::ConstPtr& msg)
-{
-    drill_control_ = msg->data;
+    command_in_ = msg->data;
 }
 void RockinRefboxRos::cbCameraControl(const std_msgs::String::ConstPtr& msg)
 {
