@@ -45,6 +45,10 @@ class RockinRefbox
         std::shared_ptr<ConveyorBeltStatus> get_conveyor_belt_status();
         std::shared_ptr<Image> get_image();
 
+        void send_conveyor_belt_command(bool on);        
+        void send_drilling_machine_command(bool down);
+        void send_camera_command();
+
     private:
         void send_beacon_signal();
 

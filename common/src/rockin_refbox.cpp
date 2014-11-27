@@ -289,3 +289,51 @@ std::shared_ptr<Image> RockinRefbox::get_image()
 {
     return image_msg_;
 }
+
+void RockinRefbox::send_conveyor_belt_command(bool on)
+{
+    ConveyorBeltCommand conveyor_belt_command;
+
+    if ((conveyor_belt_msg_->state() == START && on) || (conveyor_belt_msg_->state() == STOP && !on))
+    {
+        return;      
+    }
+    else
+    {
+        if (on)
+        {
+            conveyor_belt_command.set_command(START);
+        }
+        else
+        {
+            conveyor_belt_command.set_command(STOP);
+        }
+        peer_team_->send(conveyor_belt_command);
+    }
+
+}
+
+void RockinRefbox::send_drilling_machine_command(bool down)
+{
+    DrillingMachineCommand drilling_machine_command;
+    DrillingMachineStatus::State state = drilling_machine_msg_->state();    
+    if (down)
+    {
+        if (state == DrillingMachineStatus::AT_BOTTOM) return;
+        if (state == DrillingMachineStatus::MOVING_DOWN) return;        
+        drilling_machine_command.set_command(DrillingMachineCommand::MOVE_DOWN);
+    }
+    else
+    {
+        if (state == DrillingMachineStatus::AT_TOP) return;
+        if (state == DrillingMachineStatus::MOVING_UP) return;
+        drilling_machine_command.set_command(DrillingMachineCommand::MOVE_UP);
+    }
+    peer_team_->send(drilling_machine_command);
+}
+
+void RockinRefbox::send_camera_command()
+{
+    CameraCommand cam_cmd;
+    peer_team_->send(cam_cmd);
+}
