@@ -95,6 +95,19 @@ void RockinRefboxRos::handleRequest()
             request_in_ = "";
         }
     }
+    if (request_in_ == "r_tbm2_task") {
+        ROS_INFO("Handling r_tbm2_task request");
+        std::shared_ptr<OrderInfo> order_info = refbox_->get_order();
+        std::shared_ptr<Inventory> inventory = refbox_->get_inventory();
+        if (order_info && inventory)
+        {
+            std_msgs::String task_spec;
+            task_spec.data = parseIntoCBT(order_info, inventory);
+            refbox_task_pub_.publish(task_spec);
+            request_in_ = "";
+        }
+    }
+
     if (request_in_ == "r_image")
     {
         ROS_INFO("Handling r_image request");
@@ -182,6 +195,73 @@ void RockinRefboxRos::handleRequest()
     }
 }
 
+/** *** *** HACK A NEW CBT *** *** **/
+string RockinRefboxRos::parseIntoCBT(std::shared_ptr<OrderInfo> order_info, 
+    std::shared_ptr<Inventory> inventory)
+{
+    int items_on_conveyor = 0;
+    int number_of_containers = 0;
+    std::string result;
+    std::string container_location;
+    std::string container_type;
+    for (int i = 0; i < inventory->items_size(); i++)
+    {
+        const Inventory_Item &item = inventory->items(i);
+        std::cout << "inventory item!" << std::endl;
+
+        if (item.has_location()) 
+        {
+            std::cout << "item location " << item.location().description() << std::endl; 
+            if (item.location().description() == "CONVEYOR_BELT-01")
+            {
+                std::cout << "REQUEST FROM CONVEYOR_BELT-01 == " 
+                << item.object().description() << std::endl;
+                items_on_conveyor++;
+            } else if (item.object().description().compare(0,2,"EM") == 0){
+                std::cout << "Container located at " << item.location().description() << std::endl;
+                // ONLY CARE ABOUT MOST RECENT CONTAINER
+                container_location = item.location().description();
+                container_type = item.object().description();
+                remap(container_location);
+                number_of_containers++;
+            }
+        }
+
+    }
+    /*
+    std::cout << "need to pick " << items_on_conveyor << std::endl;
+    std::cout << "containers " << number_of_containers << std::endl;
+    */
+    /**
+    <container(S14,EM-03-02)><conveyor(CB1,5)><drill(W03,ER-02-01)><deliver(W04,EM-03-02)>
+    for (int i = 0; i < inventory->items_size(); i++)
+    {
+        const Inventory_Item &item = inventory->items(i);
+        if (item.object().description() == object_name)
+        {
+            if (item.has_location())
+            {
+                return item.location().description();
+            }
+            else if (item.has_container())
+            {
+                return getLocation(inventory, item.container().description());                
+            }
+            else
+            {
+                return "";
+            }
+        }
+    }
+
+    **/
+    result = std::string("<container("+container_location+","+
+                         container_type+")><conveyor(CB1,"+
+                         std::to_string(items_on_conveyor)+")>");
+    return result;
+}
+/*** END CBT ***/
+
 string RockinRefboxRos::parseIntoRoboCupTask(std::shared_ptr<OrderInfo> order_info, 
     std::shared_ptr<Inventory> inventory)
 {
@@ -263,6 +343,8 @@ void RockinRefboxRos::remap(std::string &location)
 {
     boost::replace_all(location, "SHELF-", "S");
     boost::replace_all(location, "WORKSTATION-", "W");
+    boost::replace_all(location, "CONVEYOR_BELT-0", "CB");
+    boost::replace_all(location, "ROBOT", "RBT");
 }
 
 std::string RockinRefboxRos::getLocation(std::shared_ptr<Inventory> inventory, std::string object_name)

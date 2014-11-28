@@ -50,6 +50,8 @@ private:
     bool getRefboxConfigParams();
     string parseIntoRoboCupTask(std::shared_ptr<OrderInfo> order_info, 
         std::shared_ptr<Inventory> inventory);
+    string parseIntoCBT(std::shared_ptr<OrderInfo> order_info, 
+        std::shared_ptr<Inventory> inventory);
     string getLocation(std::shared_ptr<Inventory> inventory, string object_name);
     void remap(string &location);
 
